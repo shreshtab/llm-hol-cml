@@ -2,7 +2,7 @@ import os
 import cmlapi
 import sys
 import gradio as gr
-import pinecone
+from pinecone import Pinecone, ServerlessSpec
 from typing import Any, Union, Optional
 from pydantic import BaseModel
 import tensorflow as tf
@@ -27,11 +27,11 @@ if USE_PINECONE:
     PINECONE_INDEX = os.getenv('PINECONE_INDEX')
 
     print("initialising Pinecone connection...")
-    pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+    pc = Pinecone(api_key=os.environ.get(os.getenv('PINECONE_API_KEY')))
     print("Pinecone initialised")
 
     print(f"Getting '{PINECONE_INDEX}' as object...")
-    index = pinecone.Index(PINECONE_INDEX)
+    index = pc.Index(PINECONE_INDEX)
     print("Success")
 
     # Get latest statistics from index
@@ -206,7 +206,7 @@ def get_nearest_chunk_from_pinecone_vectordb(index, question):
     # Generate embedding for user question with embedding model
     retriever = SentenceTransformer(EMBEDDING_MODEL_REPO)
     xq = retriever.encode([question]).tolist()
-    xc = index.query(xq, top_k=5,include_metadata=True)
+    xc = index.query(vectors=xq, top_k=5,include_metadata=True)
     
     matching_files = []
     scores = []
