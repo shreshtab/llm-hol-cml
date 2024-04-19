@@ -55,8 +55,8 @@ MODEL_ENDPOINT = os.getenv("CDSW_API_URL").replace("https://", "https://modelser
 MODEL_ENDPOINT = MODEL_ENDPOINT + MODEL_ACCESS_KEY
 
 # Double check default region
-if os.environ.get("AWS_DEFAULT_REGION") == "":
-    os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
+if os.environ.get("AWS_DEFAULT_REGION") == "ap-southeast-1":
+    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
     
 ## Setup Bedrock client:
@@ -206,7 +206,7 @@ def get_nearest_chunk_from_pinecone_vectordb(index, question):
     # Generate embedding for user question with embedding model
     retriever = SentenceTransformer(EMBEDDING_MODEL_REPO)
     xq = retriever.encode([question]).tolist()
-    xc = index.query(vectors=xq, top_k=5,include_metadata=True)
+    xc = index.query(vector=xq, top_k=5,include_metadata=True)
     
     matching_files = []
     scores = []
