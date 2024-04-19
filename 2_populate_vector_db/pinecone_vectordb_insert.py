@@ -4,117 +4,90 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoTokenizer, AutoModel
 from pathlib import Path
-import pinecone
+from pinecone import Pinecone, ServerlessSpec
 from sentence_transformers import SentenceTransformer
 
-# Get environment variables for Pinecone API key, environment, and index name.
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 PINECONE_ENVIRONMENT = os.getenv('PINECONE_ENVIRONMENT')
 PINECONE_INDEX = os.getenv('PINECONE_INDEX')
 dimension = 768
 
-# Set embedding model
 EMBEDDING_MODEL_REPO = "sentence-transformers/all-mpnet-base-v2"
 
-# Load the model stored in models/embedding-model
 tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_REPO)
 model = AutoModel.from_pretrained(EMBEDDING_MODEL_REPO)
 
-# Define a function to create a Pinecone collection with the specified index name.
-def create_pinecone_collection(PINECONE_INDEX):
-    try:
-        print(f"Creating 768-dimensional index called '{PINECONE_INDEX}'...")
-        # Create the Pinecone index with the specified dimension.
-        pinecone.create_index(PINECONE_INDEX, dimension=768)
-        print("Success")
-    except:
-        # index already created, continue
-        pass
+def create_pinecone_collection(pc, index_name):
+#    try:
+#        print(f"Creating 768-dimensional index called '{index_name}'...")
+#        pc.create_index(index_name, dimension=dimension)
+#        print("Success")
+#    except Exception as e:
+#        if hasattr(e, "status_code") and e.status_code == 409:
+#            print(f"Index '{index_name}' already exists. Continuing without creating a new index.")
+#        else:
+#            print(f"Failed to create index '{index_name}': {e}")
+#            raise
 
     print("Checking Pinecone for active indexes...")
-    active_indexes = pinecone.list_indexes()
+    active_indexes = pc.list_indexes()
     print("Active indexes:")
     print(active_indexes)
-    print(f"Getting description for '{PINECONE_INDEX}'...")
-    index_description = pinecone.describe_index(PINECONE_INDEX)
+    print(f"Getting description for '{index_name}'...")
+    index_description = pc.describe_index(index_name)
     print("Description:")
     print(index_description)
 
-    print(f"Getting '{PINECONE_INDEX}' as object...")
-    pinecone_index = pinecone.Index(PINECONE_INDEX)
+    print(f"Getting '{index_name}' as object...")
+    pinecone_index = pc.Index(index_name)
     print("Success")
 
-    # Return the Pinecone index object.
     return pinecone_index
-    
 
-# Mean Pooling - Take attention mask into account for correct averaging
 def mean_pooling(model_output, attention_mask):
-    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+    token_embeddings = model_output[0]
     input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
     return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
-
-# Create embeddings using chosen embedding-model
 def get_embeddings(sentence):
-    # Sentences we want sentence embeddings for
     sentences = [sentence]
-    
-    # Tokenize sentences
-    # Default model will truncate the document and only gets embeddings of the first 256 tokens.
-    # Semantic search will only be effective on these first 256 tokens.
-    # Context loading will still include the ENTIRE document file
     encoded_input = tokenizer(sentences, padding='max_length', truncation=True, return_tensors='pt')
-
-    # Compute token embeddings
     with torch.no_grad():
         model_output = model(**encoded_input)
-
-    # Perform pooling
     sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
-
-    # Normalize embeddings
     sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
+    return sentence_embeddings.tolist()[0]
 
-    return (sentence_embeddings.tolist()[0])
-
-    
-# Create an embedding for given text/doc and insert it into Pinecone Vector DB
 def insert_embedding(pinecone_index, id_path, text):
     print("Upserting vectors...")
-    vectors = list(zip([text[:512]], [get_embeddings(text)], [{"file_path": id_path}]))
-    upsert_response = pinecone_index.upsert(
-        vectors=vectors
-        )
-    print("Success")
-    
-    
+    vectors = [(text[:512], get_embeddings(text), {"file_path": id_path})]
+    try:
+        upsert_response = pinecone_index.upsert(vectors=vectors)
+        print("Success")
+    except Exception as e:
+        print(f"Failed to upsert vectors: {e}")
+        raise
+
 def main():
     try:
-        print("initialising Pinecone connection...")
-        # Initialize the Pinecone connection with API key and environment.
-        pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
-        print("Pinecone initialised")
-        
-        # Create a Pinecone collection with the specified index name.
-        collection = create_pinecone_collection(PINECONE_INDEX)
-        
-        # Same files are ignored (e.g. running process repetitively won't overwrite, just pick up new files)
-        print("Pinecone index is up and collection is created")
+        print("Initializing Pinecone connection...")
+        pc = Pinecone(api_key=PINECONE_API_KEY)
+        print("Pinecone initialized")
 
-        # Read KB documents in ./data directory and insert embeddings into Vector DB for each doc
+        collection = create_pinecone_collection(pc, PINECONE_INDEX)
+        print("Pinecone index is up, collection created")
+
         doc_dir = '/home/cdsw/data'
-        for file in Path(doc_dir).glob(f'**/*.txt'):
-            with open(file, "r") as f: # Open file in read mode
+        for file in Path(doc_dir).glob('**/*.txt'):
+            with open(file, "r") as f:
                 print("Generating embeddings for: %s" % file.name)
                 text = f.read()
-                # Insert the embeddings into the Pinecone Vector DB.
                 insert_embedding(collection, os.path.abspath(file), text)
         print('Finished loading Knowledge Base embeddings into Pinecone')
 
     except Exception as e:
-        raise (e)
-
+        print(f"An error occurred: {e}")
+        raise
 
 if __name__ == "__main__":
     main()
