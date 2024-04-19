@@ -1,7 +1,7 @@
 import os
 import gradio as gr
 import cmlapi
-import pinecone
+from pinecone import Pinecone, ServerlessSpec
 from typing import Any, Union, Optional
 from pydantic import BaseModel
 import tensorflow as tf
@@ -30,7 +30,7 @@ if USE_PINECONE:
     PINECONE_INDEX = os.getenv('PINECONE_INDEX')
 
     print("initialising Pinecone connection...")
-    pc = pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
+    pc = Pinecone(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
     print("Pinecone initialised")
 
     print(f"Getting '{PINECONE_INDEX}' as object...")
