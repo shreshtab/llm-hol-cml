@@ -30,5 +30,5 @@ entries:
       - CML Labs
       - Model Deployment
       - GPU
-    git_url: "https://github.com/cloudera/CML_AMP_Deploy-Mistral7B-CML-Native-Model"
+    git_url: "https://github.com/mmehra12/CML_AMP_Deploy-Mistral7B-CML-Native-Model.git"
     is_prototype: true
