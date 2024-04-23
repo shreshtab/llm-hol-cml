@@ -1,7 +1,7 @@
 name: PKO Labs
 
 entries:
-  - title: Hands on Lab focused on LLMs
+  - title: Hands on Lab focused on LLMs - AMER
     label: llm-hol
     short_description: |
       This AMP is used for Cloudera Machine Learning Hands on Labs and focuses on CML's integrations with external components as well as running
@@ -17,7 +17,7 @@ entries:
     git_url: "https://github.com/mmehra12/llm-hol-cml"
     is_prototype: true
     
-  - title: Shared LLM Model for Hands on Lab
+  - title: Shared LLM Model for Hands on Lab - AMER
     label: llm-model-deploy
     short_description: |
       This AMP deploys Mistral-7B model as a CML API endpoint. Requires a GPU node with 4 vCores and 16 GB memory minimum.
