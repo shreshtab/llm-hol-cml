@@ -55,8 +55,8 @@ MODEL_ENDPOINT = os.getenv("CDSW_API_URL").replace("https://", "https://modelser
 MODEL_ENDPOINT = MODEL_ENDPOINT + MODEL_ACCESS_KEY
 
 # Double check default region
-if os.environ.get("AWS_DEFAULT_REGION") == "ap-southeast-1":
-    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+if os.environ.get("AWS_DEFAULT_REGION") != "us-west-2":
+    os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
 
     
 ## Setup Bedrock client:
