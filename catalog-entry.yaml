@@ -14,7 +14,7 @@ entries:
       - Exercises
       - LLM
       - Model Deployment
-    git_url: "https://github.com/mmehra12/llm-hol-cml"
+    git_url: "https://github.com/shreshtab/llm-hol-cml"
     is_prototype: true
     
   - title: Shared LLM Model for Hands on Lab - AMER
