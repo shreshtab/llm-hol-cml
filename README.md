@@ -36,24 +36,25 @@ If you are new to CML, take a moment to explore the dashboard.
 Cloudera uses the concept of _projects_ to organize the workspace. Each project is typically linked to a remote repository (e.g. git) and can have multiple collaborators working on it. In the interest of time, a _Hands on Lab focused on LLMs - AMER_ project has already been created for you and you are the sole _Owner_ of that project. 
 
 > **0c.** When ready click into the project:
-![Alt-text](./assets/cml_intro-1.png)
+![Workspace Home](./assets/PKO_Workspace_Home.png)
 
 Take a moment to familiarize yourself with the project page. Notice that your project now has all required files (your code base), a readme below, project specific options in the left hand column, plus more. Throughout the lab you will use many of the features listed here.
-![Alt-text](./assets/cml_intro-1.png)
+![Project Home](./assets/Project_Home.png)
 
 ## 1. Exploring Amazon Bedrock through CML
 
 In this first section, we'll interact with a model (Anthropic's Claude) via Amazon's Bedrock service. To do this we will start a _Session_ with a Jupyter notebook UI. 
 
 >**1a.** Start a session by clicking _New Session_ in the top right corner. Alternatively you can click on _Sessions_ in the sidebar and click _New Session_ there.
-![Alt text](./assets/open-session.png)
+![Session Button](./assets/Session_Button.png)
 
 >**1b.** Give you session a name (e.g. "Jupyter Rocks!"). 
 >* For **Editor** select _JupyterLab_ 
 >* For **Kernel** select _Python 3.10_
+>* For **Version** select _2023.12_
 >* For **Edition** select _Nvidia GPU_ 
 >* Leave the other settings as is.
->![Session setup UI](./assets/Session-settings.png)
+>![Session setup UI](./assets/Session_Create.png)
 
 >**1c.** Click _Start Session_ in the bottom right.
 
@@ -64,7 +65,7 @@ In this first section, we'll interact with a model (Anthropic's Claude) via Amaz
 > **1f.** You will now see a familiar Jupyter notebook interface. In the left navigation panel go to ```1_hosted_models``` folder and open ```prototype_with_aws_bedrock.ipynb``` by double-clicking it.
 ![Alt text](./assets/bedrock-file.png)
 
->**1g.** As you walk through the notebook review the explanations and run each cell (you can use ```Enter+Shift``` or ```Command+Enter```). When you are finished going through the notebook come back to this guide. 
+>**1g.** As you walk through the notebook review the explanations and run each cell (you can use ```Enter+Shift``` or ```Command+Enter```). Alternatively, you can click on the "Play" button at the tom of the notebook. When you are finished going through the notebook come back to this guide. 
 ![Alt text](./assets/bedrock-client-setup.png)
 
 :pencil2: You have now gotten familiar with creating a CML session, working with JupyterLab editor and interacted with a 3rd party LLM provider. All within an isolated and secure compute pod.
