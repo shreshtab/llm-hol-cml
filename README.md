@@ -191,7 +191,7 @@ You can also deploy a CML application via [CML's APIv2](https://docs.cloudera.co
 >**4l.** Work through the notebook by running each cell. **Note**: Make sure to change the _subdomain_ in step 4.4 to something unique. When you are finished come back to the _Applications_ page and interact with the app you just deployed.
 ![LLM App Notebook](./assets/Change_Subdomain.png)
 
-:pencil2: CML provides a rich API to programatically leverage its various functionality. This can be very useful to use in production systems. 
+:pencil2: CML provides a rich API to programatically leverage its various functionality. This can be great to use in production systems. 
 
 <!-- ## 5. Switch Vector DB to Chroma DB
 
