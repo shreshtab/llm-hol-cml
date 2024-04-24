@@ -1,16 +1,16 @@
 # Large Language Models with Cloudera
 
-The goal of this hands-on lab is to explore Cloudera Machine Learning (CML) through the lens of [Retreival Augmented Generation](https://arxiv.org/abs/2312.10997) (RAG) architecture for Large Language Models. Starting from a simple Jupyter notebook and finishing with a complete chatbot application, participants will get to know some of the key CML features and advantages. In a real-world scenario, changing business requirements and technology advancements necessitate agility and CML is a great tool to provide that to Data Science practitioners. 
+The goal of this hands-on lab is to explore Cloudera Machine Learning (CML) through the lens of the [Retreival Augmented Generation](https://arxiv.org/abs/2312.10997) (RAG) architecture for Large Language Models. Starting from a simple Jupyter notebook and finishing with a complete chatbot application, participants will get to know some of the key CML features and advantages. In a real-world scenario, changing business requirements and technology advancements requires agility and CML is a great tool to enable Data Science practitioners to build use cases quickly.
 
-Because the applications of LLMs can be quite broad across industries, it is useful to hone in on a particular use case for the purposes of this lab. 
+Because the applications of LLMs can be quite broad across industries, we will hone in on a particular use case for the purposes of this lab. 
 
-> **Lab use case:** Software vendor is looking to pilot an LLM-based chat interface to improve employee productivity when searching product documentation. 
+> **Lab use case:** A software vendor is looking to pilot an LLM-based chat interface to improve employee productivity when searching product documentation.
  
 ## Lab Flow
 
-Ultimately the lab aims to demonstrate the ease and flexibility in which users can prototype new approaches and integrate them into fully-packages solutions like LLM applications.
+Ultimately, the lab aims to demonstrate the ease and flexibility in which users can prototype new approaches and integrate them into fully-packages solutions like LLM applications.
 
-There are currently 8 exercises in the lab, and others will be added soon. It is important to follow the exercise order, as there are dependencies between different stages. 
+There are currently 4 exercises in the lab, and others will be added soon. It is important to follow the exercise order, as there are dependencies between different stages. 
   - [0. Getting into CML](#getting-into-cml)
   - [1. Exploring Amazon Bedrock through CML](#1-exploring-amazon-bedrock-through-cml)
   - [2. Scrape and ingest data and populate Pinecone DB](#2-scrape-and-ingest-data-and-populate-pinecone-db)
@@ -23,21 +23,23 @@ There are currently 8 exercises in the lab, and others will be added soon. It is
 
 ## 0. Getting into CML
 
-Your SSO login link will take you direction to the home screen of Cloudera Data Platform. From here you can access CML - one of its Data Services.
+After login, you will be taken to the home screen of Cloudera Data Platform. From here you can access CML - one of its Data Services.
 
 > **0a.** Click on the "Machine Learning" icon.
+![Control Plane to CML](./assets/CDP_Home.png)
 
-> **0b.** Then click on ML Workspace called _llmhol-aw-wksp_ (the name may vary for your lab).
-![Control Plane to CML](./assets/intro_1.png)
+> **0b.** Then click on ML Workspace called _partnerkickoff-cml_.
+![CML Home Page](./assets/ML_Workspaces_Home.png)
 
-If you are new to CML, take a moment to explore available information through the dashboard.  
+If you are new to CML, take a moment to explore the dashboard.
 
-Concept of _projects_ is used to organize the workspace. Each project is typically linked to a remote repository (e.g. git) and can have multiple collaborators working on it. In the interest of time, a _Hands on Lab Workshop with LLM_ project has already been created for you and you are the sole _Owner_ of that project. 
+Cloudera uses the concept of _projects_ to organize the workspace. Each project is typically linked to a remote repository (e.g. git) and can have multiple collaborators working on it. In the interest of time, a _Hands on Lab focused on LLMs - AMER_ project has already been created for you and you are the sole _Owner_ of that project. 
 
 > **0c.** When ready click into the project:
 ![Alt-text](./assets/cml_intro-1.png)
 
 Take a moment to familiarize yourself with the project page. Notice that your project now has all required files (your code base), a readme below, project specific options in the left hand column, plus more. Throughout the lab you will use many of the features listed here.
+![Alt-text](./assets/cml_intro-1.png)
 
 ## 1. Exploring Amazon Bedrock through CML
 
