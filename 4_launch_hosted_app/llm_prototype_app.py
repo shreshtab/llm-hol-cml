@@ -125,7 +125,7 @@ def main():
         fn=get_responses, 
         title="Enterprise Custom Knowledge Base Chatbot",
         description = DESC,
-        additional_inputs=[gr.Radio(['Local Mistral 7B', 'AWS Bedrock Claude v2.1'], label="Select Foundational Model", value="AWS Bedrock Claude v2.1", visible=False), 
+        additional_inputs=[gr.Radio(['Local Mistral 7B', 'AWS Bedrock Claude v2.1'], label="Select Foundational Model", value="AWS Bedrock Claude v2.1", visible=True), 
                            gr.Slider(minimum=0.01, maximum=1.0, step=0.01, value=0.5, label="Select Temperature (Randomness of Response)"),
                            gr.Radio(["50", "100", "250", "500", "1000"], label="Select Number of Tokens (Length of Response)", value="250"),
                            gr.Radio(['None', 'Pinecone'], label="Vector Database Choices", value="None")],
@@ -153,11 +153,12 @@ def get_responses(message, history, model, temperature, token_count, vector_db):
     #print(f"Chat so far {history}")
     
     
-    if model == "'Local Mistral 7B":
+    if model == "Local Mistral 7B":
         
         if vector_db == "None":
+            # No context call Mistral
             context_chunk = ""
-            response = get_llama2_response_with_context(message, context_chunk, temperature, token_count)
+            response = get_mistral7b_response_with_context(message, context_chunk, temperature, token_count)
         
             # Stream output to UI
             for i in range(len(response)):
@@ -165,6 +166,11 @@ def get_responses(message, history, model, temperature, token_count, vector_db):
                 yield response[:i+1]
                 
         elif vector_db == "Pinecone":
+            # Get context chunk
+            context_chunk, source, score = get_nearest_chunk_from_pinecone_vectordb(index, message)
+            
+            # Call local Mistral Model
+            response = get_mistral7b_response_with_context(message, context_chunk, temperature, token_count)
             
             # Stream output to UI
             for i in range(len(response)):
@@ -275,30 +281,47 @@ def get_bedrock_response_with_context(question, context, temperature, token_coun
 
     
 # Pass through user input to LLM model with enhanced prompt and stop tokens
-def get_llama2_response_with_context(question, context, temperature, token_count):
-
-    question = "Answer this question based on the given context. Question: " + str(question)
+def get_mistral7b_response_with_context(question, context, temperature, token_count):
     
-    question_and_context = question + " Here is the context: " + str(context)
+    # Supply different instructions, depending on whether or not context is provided
+    # Following Mistral 7B's spec to take advantage of fine tuning
+    if context == "":
+        instruction_text = """<s>[INST]<<SYS>>You are a helpful, honest, and courteous assistant. If you don't know the answer, simply state I don't know the answer to that question.<</SYS>>
+        Please provide an honest response to the user question enclosed in <question></question> tags. Do not repeat the question in the output.
+    <question>{{QUESTION}}</question>[/INST]"""
+    else:
+        instruction_text = """<s>[INST]<<SYS>>You are a helpful, honest, and courteous assistant. If you don't know the answer, simply state I don't know the answer to that question.<</SYS>>
+        Please read the text provided between the tags <text></text> and provide an honest response to the user question enclosed in <question></question> tags. Do not repeat the question in the output.
+    <text>{{CONTEXT}}</text>
+    
+    <question>{{QUESTION}}</question>[/INST]"""
+        
+    # Replace instruction placeholder to build a complete prompt
+    full_prompt = instruction_text.replace("{{QUESTION}}", question).replace("{{CONTEXT}}", context)
+
+#     question = "Answer this question based on the given context. Question: " + str(question)
+    
+#     question_and_context = question + " Here is the context: " + str(context)
 
     try:
         
         # Following LLama's spec for prompt engineering
-        llama_sys = f"<<SYS>>\n You are a helpful, respectful and honest assistant. If you are unsurae about an answer, truthfully say \"I don't know\".\n<</SYS>>\n\n"
-        llama_inst = f"[INST]Use your own knowledge and additionally use the following information to answer the user's question: {context} [/INST]"
-        question_and_context = f"{llama_sys} {llama_inst} [INST] User: {question} [/INST]"
+        # llama_sys = f"<<SYS>>\n You are a helpful, respectful and honest assistant. If you are unsurae about an answer, truthfully say \"I don't know\".\n<</SYS>>\n\n"
+        # llama_inst = f"[INST]Use your own knowledge and additionally use the following information to answer the user's question: {context} [/INST]"
+        # question_and_context = f"{llama_sys} {llama_inst} [INST] User: {question} [/INST]"
         
-        data={ "request": {"prompt":question_and_context,"temperature":temperature,"max_new_tokens":token_count,"repetition_penalty":1.0} }
+        data={ "request": {"prompt":full_prompt,"temperature":temperature,"max_new_tokens":token_count,"repetition_penalty":1.0} }
         
         r = requests.post(MODEL_ENDPOINT, data=json.dumps(data), headers={'Content-Type': 'application/json'})
         
         # Logging
         print(f"Request: {data}")
-        print(f"Response: {r.json()}")
+        # print(f"Response: {r.text}")
         
-        #no_inst_response = str(r.json()['response'])[len(question_and_context)+2:]
+        no_inst_response = str(r.json()['response']['prediction']['response'][len(full_prompt)-2:])
+        print(f"Response: {no_inst_response}")
             
-        return "TEST" #no_inst_response
+        return no_inst_response #no_inst_response
         
     except Exception as e:
         print(e)
