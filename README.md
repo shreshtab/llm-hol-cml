@@ -2,7 +2,7 @@
 
 The goal of this hands-on lab is to explore Cloudera Machine Learning (CML) through the lens of the [Retreival Augmented Generation](https://arxiv.org/abs/2312.10997) (RAG) architecture for Large Language Models. Starting from a simple Jupyter notebook and finishing with a complete chatbot application, participants will get to know some of the key CML features and advantages. In a real-world scenario, changing business requirements and technology advancements requires agility and CML is a great tool to enable Data Science practitioners to build use cases quickly.
 
-Because the applications of LLMs can be quite broad across industries, we will hone in on a particular use case for the purposes of this lab. 
+Because the applications of LLMs can be quite broad across industries, we will hone in on a particular use case for the purposes of this lab.
 
 > **Lab use case:** A software vendor is looking to pilot an LLM-based chat interface to improve employee productivity when searching product documentation.
  
@@ -10,16 +10,16 @@ Because the applications of LLMs can be quite broad across industries, we will h
 
 Ultimately, the lab aims to demonstrate the ease and flexibility in which users can prototype new approaches and integrate them into fully-packages solutions like LLM applications.
 
-There are currently 4 exercises in the lab, and others will be added soon. It is important to follow the exercise order, as there are dependencies between different stages. 
+There are currently 8 exercises in the lab. It is important to follow the exercise order, as there are dependencies between different stages. 
   - [0. Getting into CML](#getting-into-cml)
   - [1. Exploring Amazon Bedrock through CML](#1-exploring-amazon-bedrock-through-cml)
   - [2. Scrape and ingest data and populate Pinecone DB](#2-scrape-and-ingest-data-and-populate-pinecone-db)
   - [3. Explore your data via Pinecone DB](#3-explore-your-data-via-pinecone-db)
   - [4. Deploy a CML application](#4-deploy-a-cml-application)
-  <!-- - [5. Switch Vector DB to Chroma DB](#5-switch-vector-db-to-chroma-db)
+  - [5. Switch Vector DB to Chroma DB](#5-switch-vector-db-to-chroma-db)
   - [6. Langchain](#6-langchain)
   - [7. Use a locally hosted LLama2 model](#7-use-a-locally-hosted-llama2-model)
-  - [8. Launch Final Application](#8-launch-final-application) -->
+  - [8. Launch Final Application](#8-launch-final-application)
 
 ## 0. Getting into CML
 
@@ -28,12 +28,12 @@ After login, you will be taken to the home screen of Cloudera Data Platform. Fro
 > **0a.** Click on the "Machine Learning" icon.
 ![Control Plane to CML](./assets/CDP_Home.png)
 
-> **0b.** Then click on ML Workspace called _partnerkickoff-cml_.
+> **0b.** Then click on ML Workspace called _amer-wkshop-ws2_.
 ![CML Home Page](./assets/ML_Workspaces_Home.png)
 
 If you are new to CML, take a moment to explore the dashboard.
 
-Cloudera uses the concept of _projects_ to organize the workspace. Each project is typically linked to a remote repository (e.g. git) and can have multiple collaborators working on it. In the interest of time, a _Hands on Lab focused on LLMs - AMER_ project has already been created for you and you are the sole _Owner_ of that project. 
+Cloudera uses the concept of _projects_ to organize the workspace. Each project is typically linked to a remote repository (e.g. git) and can have multiple collaborators working on it. In the interest of time, a _Hands on Lab focused on LLMs_ project has already been created for you and you are the sole _Owner_ of that project. 
 
 > **0c.** When ready click into the project:
 ![Workspace Home](./assets/PKO_Workspace_Home.png)
@@ -51,7 +51,7 @@ In this first section, we'll interact with a model (Anthropic's Claude) via Amaz
 >**1b.** Give you session a name (e.g. "Jupyter Rocks!"). 
 >* For **Editor** select _JupyterLab_ 
 >* For **Kernel** select _Python 3.10_
->* For **Version** select _2023.12_
+>* For **Version** select _2024.02_
 >* For **Edition** select _Nvidia GPU_ 
 >* Leave the other settings as is.
 >![Session setup UI](./assets/Session_Create.png)
@@ -60,7 +60,7 @@ In this first section, we'll interact with a model (Anthropic's Claude) via Amaz
 
 >**1d.** After a few seconds your isolated compute pod, running Jupyter UI, with Python 3.10 Kernel and additional GPU libraries will be ready. 
 
->**1e.** A pop-up will open suggesting data connection code snippets to get started. You can select _Don't show me this again_ and close the pop-up window.
+>**1e.** A pop-up will open suggesting data connection code snippets to get started. This is useful to connect to data sources available in the same environment. You can select _Don't show me this again_ and close the pop-up window.
 
 > **1f.** You will now see a familiar Jupyter notebook interface. In the left navigation panel go to ```1_hosted_models``` folder and open ```prototype_with_aws_bedrock.ipynb``` by double-clicking it.
 ![Alt text](./assets/bedrock-file.png)
@@ -94,7 +94,7 @@ There are two ways to create a JOB in CML: via the UI or programmatically with [
 > **2f.** Ensure you've selected the right runtime settings, per below:
 >* For **Editor** select _JupyterLab_ 
 >* For **Kernel** select _Python 3.10_
->* For **Version** select _2023.12_
+>* For **Version** select _2024.02_
 >* For **Edition** select _Nvidia GPU_ 
 
 >**2g.** Under **Schedule**, select _Dependent_, then select the job _Pull and Convert HTMLS to TXT_. ![Alt text](./assets/html-scrape-job-parameters.png)
@@ -103,9 +103,9 @@ There are two ways to create a JOB in CML: via the UI or programmatically with [
 
 Great! Now you've created your very own CML job! You can run the scraping job and the populate vector DB job will kick off automatically after that. 
 
->**2g.** Go back to _Jobs_ (as shown above in substep 2b)
+>**2i.** Go back to _Jobs_ (as shown above in substep 2b)
 
->**2h.** Click the _Run as_ button for the _Pull and Convert HTMLS to TXT_ job. Note that jobs can also be triggered using a [machine user](https://docs.cloudera.com/management-console/cloud/user-management/topics/mc-machine-user.html) (a.k.a. service account).   
+>**2j.** Click the _Run as_ button for the _Pull and Convert HTMLS to TXT_ job. Note that jobs can also be triggered using a [machine user](https://docs.cloudera.com/management-console/cloud/user-management/topics/mc-machine-user.html) (a.k.a. service account).   
 ![Alt text](./assets/html-scrape-run-job.png)
 
 After just over a minute you should see both of your jobs completed successfully. While the jobs are running you can review the code in ```2_populate_vector_db/pinecone_vectordb_insert.py```, by navigating to _Overview_ > _Files_ in a new tab.
@@ -147,16 +147,16 @@ The exercise will walk you through the steps to deploy the application using the
 >**4f.** Select the following path for your application **Script**:
 ```4_launch_hosted_app/llm_prototype_app.py```
 
->**4e.** Ensure you have selected the right container settings for the application, per below:
+>**4g.** Ensure you have selected the right container settings for the application, per below:
 >* For **Editor** select _JupyterLab_ 
 >* For **Kernel** select _Python 3.10_
->* For **Version** select _2023.12_
+>* For **Version** select _2024.02_
 >* For **Edition** select _Nvidia GPU_ 
 
->**4e.** For resource profile, select _2 vCPU / 4 GB Memory_. Overall, aside for the subdomain, settings should look like the below screenshot.
+>**4h.** For resource profile, select _2 vCPU / 4 GB Memory_. Overall, aside for the subdomain, settings should look like the below screenshot.
 ![Alt text](./assets/image_app.png)
 
->**4f.** Click _Create Application_ at the bottom of the page.
+>**4i.** Click _Create Application_ at the bottom of the page.
 
 ### Interacting with an Application
 The application will take a couple of miuntes to start, once it does you can click on its card to open the UI. While it's starting you can review the code in ```4_launch_hosted_app/llm_prototype_app.py```.
@@ -193,7 +193,7 @@ You can also deploy a CML application via [CML's APIv2](https://docs.cloudera.co
 
 :pencil2: CML provides a rich API to programatically leverage its various functionality. This can be great to use in production systems. 
 
-<!-- ## 5. Switch Vector DB to Chroma DB
+## 5. Switch Vector DB to Chroma DB
 
 We'll continue to explore CML's modularity for hosting LLM applications. We will now switch over to a Chroma DB. This may be a good choice customers who are not able to use external vector databases, and need everything to be hosted in-house. Fundamentally, a good LLM application offers design flexibility, by allowing users to switch out the models or vector db components per business requirements.
 
@@ -272,4 +272,4 @@ To get started, we're going to revisit the application that we created in step 4
 ![Alt-text](./assets/step_8-10.png)
 
 ## :tada: Congratulations! :tada:
-You've learned a lot in the last few hours, but this is just the beginning. [Cloudera Machine Learning](https://www.cloudera.com/products/machine-learning.html) has a lot more to offer for your enterprise as part of an overall [Cloudera Data Platform](https://www.cloudera.com/) on-prem and in the cloud.  -->
+You've learned a lot in the last few hours, but this is just the beginning. [Cloudera Machine Learning](https://www.cloudera.com/products/machine-learning.html) has a lot more to offer for your enterprise as part of an overall [Cloudera Data Platform](https://www.cloudera.com/) on-prem and in the cloud. 
