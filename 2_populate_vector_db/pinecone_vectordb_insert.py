@@ -18,17 +18,20 @@ tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_REPO)
 model = AutoModel.from_pretrained(EMBEDDING_MODEL_REPO)
 
 def create_pinecone_collection(pc, index_name):
-#    try:
-#        print(f"Creating 768-dimensional index called '{index_name}'...")
-#        pc.create_index(index_name, dimension=dimension)
-#        print("Success")
-#    except Exception as e:
-#        if hasattr(e, "status_code") and e.status_code == 409:
-#            print(f"Index '{index_name}' already exists. Continuing without creating a new index.")
-#        else:
-#            print(f"Failed to create index '{index_name}': {e}")
-#            raise
-
+    # try:
+    #     print(f"Creating 768-dimensional index called '{index_name}'...")
+    #     pc.create_index(index_name, dimension=dimension, spec=ServerlessSpec(
+    #         cloud="aws",
+    #         region="us-east-1"
+    #     ))
+    #     print("Success")
+    # except Exception as e:
+    #     if hasattr(e, "status_code") and e.status_code == 409:
+    #         print(f"Index '{index_name}' already exists. Continuing without creating a new index.")
+    #     else:
+    #         print(f"Failed to create index '{index_name}': {e}")
+    #         raise
+    
     print("Checking Pinecone for active indexes...")
     active_indexes = pc.list_indexes()
     print("Active indexes:")

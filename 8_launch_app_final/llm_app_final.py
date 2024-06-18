@@ -88,7 +88,7 @@ MODEL_ENDPOINT = MODEL_ENDPOINT + MODEL_ACCESS_KEY
 #MODEL_ACCESS_KEY = os.environ["CML_MODEL_KEY"]
 #MODEL_ENDPOINT = "https://modelservice.ml-8ac9c78c-674.se-sandb.a465-9q4k.cloudera.site/model?accessKey=" + MODEL_ACCESS_KEY
 
-if os.environ.get("AWS_DEFAULT_REGION") == "":
+if os.environ.get("AWS_DEFAULT_REGION") != "us-west-2":
     os.environ["AWS_DEFAULT_REGION"] = "us-west-2"
 
     
@@ -181,91 +181,39 @@ def main():
 # Helper function for generating responses for the QA app
 def get_responses(message, history, model, temperature, token_count, vector_db):
     
+    source = ""
+    response = ""
+    context_chunk = ""
+    
+    if vector_db == "Pinecone":
+        context_chunk, source, score = get_nearest_chunk_from_pinecone_vectordb(index, message)
+    elif vector_db == "Chroma":
+        context_chunk, source = get_nearest_chunk_from_chroma_vectordb(collection, message)
+        
     if model == "Local Mistral 7B":
         
-        if vector_db == "None":
-            context_chunk = ""
-            response = get_llama2_response_with_context(message, context_chunk, temperature, token_count)
-        
-            # Stream output to UI
-            for i in range(len(response)):
-                time.sleep(0.02)
-                yield response[:i+1]
-                
-        elif vector_db == "Pinecone":
-            # TODO: sub this with call to Pinecone to get context chunks
-            #response = "ERROR: Pinecone is not implemented for LLama yet"
-            
-            # Vector search the index
-            context_chunk, source, score = get_nearest_chunk_from_pinecone_vectordb(index, message)
-            
-            # Call CML hosted model
-            response = get_llama2_response_with_context(message, context_chunk, temperature, token_count)
-            
-            # Add reference to specific document in the response
-            response = f"{response}\n\n For additional info see: {url_from_source(source)}"
-            
-            # Stream output to UI
-            for i in range(len(response)):
-                time.sleep(0.02)
-                yield response[:i+1]
-                
-        elif vector_db == "Chroma":
-            # Vector search in Chroma
-            context_chunk, source = get_nearest_chunk_from_chroma_vectordb(collection, message)
-            
-            # Call CML hosted model
-            response = get_llama2_response_with_context(message, context_chunk, temperature, token_count)
-            
-            # Add reference to specific document in the response
-            response = f"{response}\n\n For additional info see: {url_from_source(source)}"
-            
-            # Stream output to UI
-            for i in range(len(response)):
-                time.sleep(0.02)
-                yield response[:i+1]
+        response = get_mistral7b_response_with_context(message, context_chunk, temperature, token_count)
     
     elif model == "AWS Bedrock Claude v2.1":
-        if vector_db == "None":
-            # No context call Bedrock
-            response = get_bedrock_response_with_context(message, "", temperature, token_count)
         
-            # Stream output to UI
-            for i in range(len(response)):
-                time.sleep(0.02)
-                yield response[:i+1]
-                
-        elif vector_db == "Pinecone":
-            # Vector search the index
-            context_chunk, source, score = get_nearest_chunk_from_pinecone_vectordb(index, message)
+        response = get_bedrock_response_with_context(message, context_chunk, temperature, token_count)
+        
+    print("Pre-Formatted response: " + response)
+
+    if vector_db == "Pinecone" or vector_db == "Chroma":
+            response = f"{response}\n\n For additional info see {url_from_source(source)}"
+    
+    print("Formatted response: " + response)
             
-            # Call Bedrock model
-            response = get_bedrock_response_with_context(message, context_chunk, temperature, token_count)
-            
-            response = f"{response}\n\n For additional info see: {url_from_source(source)}"
-            
-            # Stream output to UI
-            for i in range(len(response)):
-                time.sleep(0.01)
-                yield response[:i+1]
-                
-        elif vector_db == "Chroma":
-            # Vector search in Chroma
-            context_chunk, source = get_nearest_chunk_from_chroma_vectordb(collection, message)
-            
-            # Call CML hosted model
-            response = get_bedrock_response_with_context(message, context_chunk, temperature, token_count)
-            
-            # Add reference to specific document in the response
-            response = f"{response}\n\n For additional info see: {url_from_source(source)}"
-            
-            # Stream output to UI
-            for i in range(len(response)):
-                time.sleep(0.02)
-                yield response[:i+1]
+    # Stream output to UI
+    for i in range(len(response)):
+        time.sleep(0.01)
+        yield response[:i+1]
+
 
 def url_from_source(source):
-    url = source.replace('/home/cdsw/data/https:/', 'https://').replace('.txt', '.html')
+    url = source.replace('/home/cdsw/data/https:/',
+                         'https://').replace('.txt', '.html')
     return f"[Reference 1]({url})"
     
 
@@ -312,7 +260,7 @@ def get_nearest_chunk_from_chroma_vectordb(collection, question):
                     # where={"metadata_field": "is_equal_to_this"}, # optional filter
                     # where_document={"$contains":"search_string"}  # optional filter
     )
-    #print(results)
+    print(response)
     
     return response['documents'][0][0], response['ids'][0][0]
 
@@ -351,42 +299,87 @@ def get_bedrock_response_with_context(question, context, temperature, token_coun
     print("Model results successfully retreived")
     
     result = response_body.get('completion')
-    #print(response_body)
-    
+    # print(result)
     return result
 
-    
 # Pass through user input to LLM model with enhanced prompt and stop tokens
-def get_llama2_response_with_context(question, context, temperature, token_count):
+def get_mistral7b_response_with_context(question, context, temperature, token_count):
     
-    llama_sys = f"<s>[INST]You are a helpful, respectful and honest assistant. If you are unsure about an answer, truthfully say \"I don't know\"."
-    
+    # Supply different instructions, depending on whether or not context is provided
+    # Following Mistral 7B's spec to take advantage of fine tuning
     if context == "":
-        # Following LLama's spec for prompt engineering
-        llama_inst = f"Please answer the user question.[/INST]</s>"
-        question_and_context = f"{llama_sys} {llama_inst} \n [INST] {question} [/INST]"
+        instruction_text = """<s>[INST]<<SYS>>You are a helpful, honest, and courteous assistant. If you don't know the answer, simply state I don't know the answer to that question.<</SYS>>
+        Please provide an honest response to the user question enclosed in <question></question> tags. Do not repeat the question in the output.
+    <question>{{QUESTION}}</question>[/INST]"""
     else:
-        # Add context to the question
-        llama_inst = f"Anser the user's question based on the folloing information:\n {context}[/INST]</s>"
-        question_and_context = f"{llama_sys} {llama_inst} \n[INST] {question} [/INST]"
+        instruction_text = """<s>[INST]<<SYS>>You are a helpful, honest, and courteous assistant. If you don't know the answer, simply state I don't know the answer to that question.<</SYS>>
+        Please read the text provided between the tags <text></text> and provide an honest response to the user question enclosed in <question></question> tags. Do not repeat the question in the output.
+    <text>{{CONTEXT}}</text>
+    
+    <question>{{QUESTION}}</question>[/INST]"""
         
+    # Replace instruction placeholder to build a complete prompt
+    full_prompt = instruction_text.replace("{{QUESTION}}", question).replace("{{CONTEXT}}", context)
+
+#     question = "Answer this question based on the given context. Question: " + str(question)
+    
+#     question_and_context = question + " Here is the context: " + str(context)
+
     try:
-        # Build a request payload for CML hosted model
-        data={ "request": {"prompt":question_and_context,"temperature":temperature,"max_new_tokens":token_count,"repetition_penalty":1.0} }
+        
+        # Following LLama's spec for prompt engineering
+        # llama_sys = f"<<SYS>>\n You are a helpful, respectful and honest assistant. If you are unsurae about an answer, truthfully say \"I don't know\".\n<</SYS>>\n\n"
+        # llama_inst = f"[INST]Use your own knowledge and additionally use the following information to answer the user's question: {context} [/INST]"
+        # question_and_context = f"{llama_sys} {llama_inst} [INST] User: {question} [/INST]"
+        
+        data={ "request": {"prompt":full_prompt,"temperature":temperature,"max_new_tokens":token_count,"repetition_penalty":1.0} }
         
         r = requests.post(MODEL_ENDPOINT, data=json.dumps(data), headers={'Content-Type': 'application/json'})
         
         # Logging
         print(f"Request: {data}")
-        print(f"Response: {r.json()}")
+        # print(f"Response: {r.text}")
         
-        no_inst_response = str(r.json()['response']['prediction']['response'])[len(question_and_context)-6:]
+        no_inst_response = str(r.json()['response']['prediction']['response'][len(full_prompt)-2:])
+        print(f"Response: {no_inst_response}")
             
-        return no_inst_response
+        return no_inst_response #no_inst_response
         
     except Exception as e:
         print(e)
         return e
+    
+# Pass through user input to LLM model with enhanced prompt and stop tokens
+# def get_llama2_response_with_context(question, context, temperature, token_count):
+    
+#     llama_sys = f"<s>[INST]You are a helpful, respectful and honest assistant. If you are unsure about an answer, truthfully say \"I don't know\"."
+    
+#     if context == "":
+#         # Following LLama's spec for prompt engineering
+#         llama_inst = f"Please answer the user question.[/INST]</s>"
+#         question_and_context = f"{llama_sys} {llama_inst} \n [INST] {question} [/INST]"
+#     else:
+#         # Add context to the question
+#         llama_inst = f"Anser the user's question based on the folloing information:\n {context}[/INST]</s>"
+#         question_and_context = f"{llama_sys} {llama_inst} \n[INST] {question} [/INST]"
+        
+#     try:
+#         # Build a request payload for CML hosted model
+#         data={ "request": {"prompt":question_and_context,"temperature":temperature,"max_new_tokens":token_count,"repetition_penalty":1.0} }
+        
+#         r = requests.post(MODEL_ENDPOINT, data=json.dumps(data), headers={'Content-Type': 'application/json'})
+        
+#         # Logging
+#         print(f"Request: {data}")
+#         print(f"Response: {r.json()}")
+        
+#         no_inst_response = str(r.json()['response']['prediction']['response'])[len(question_and_context)-6:]
+            
+#         return no_inst_response
+        
+#     except Exception as e:
+#         print(e)
+#         return e
 
 
 if __name__ == "__main__":
