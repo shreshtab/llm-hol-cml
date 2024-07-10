@@ -18,7 +18,7 @@ There are currently 8 exercises in the lab. It is important to follow the exerci
   - [4. Deploy a CML application](#4-deploy-a-cml-application)
   - [5. Switch Vector DB to Chroma DB](#5-switch-vector-db-to-chroma-db)
   - [6. Langchain](#6-langchain)
-  - [7. Use a locally hosted LLama2 model](#7-use-a-locally-hosted-llama2-model)
+  - [7. Use a locally hosted Mistal-7B model](#7-use-a-locally-hosted-Mistal-7B-model)
   - [8. Launch Final Application](#8-launch-final-application)
 
 ## 0. Getting into CML
@@ -230,7 +230,7 @@ The beauty of using langchain for our example is once we've created the chain ob
 
 :pencil2: In this exercise you've gotten familiar with a popular chaining package and applied it in a CML session to build a chain for interacting with Bedrock, Chroma, and a specific prompt template. 
 
-## 7. Use a locally hosted Mistral model
+## 7. Use a locally hosted Mistal-7B model
 
 Many organizations are hesitant to use 3rd party LLM providers, instead opting to host open source models internally, to leverage in their use cases. CML provides a convenient facility to do this via _Model Deployments_ functionality. This provides a scalable and secure way to host LLMs and classic inference models in an isolated and fully controlled CML environment. 
 
